@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+  <div id="tester" style="width:800px;height:800px;"></div>
+  <div id="hoverinfo" style="margin-left:80px;"></div>
+
+  <script>
+
+  function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  var datas2 = []
+  for(var i = 0; i < 3000; i++) {
+    var object = {
+      x: i + (Math.random() + 1) * (Math.random() * 110),
+      y: i + (Math.random() + 1) * (Math.random() * 140)
+    }
+    datas2.push(object)
+  }
+
+  function log10(val) {
+    return Math.log(val) / Math.LN10;
+  }
+
+  function generateChartData(data) {
+    var max = 1;
+    var result = [];
+    var divider = 1000
+    var multiplier = 2;
+
+    var c = 1;
+    var x = data[0].x;
+    var y = data[0].y;
+
+    for (var i = 1; i < data.length; i++) {
+        var t = Math.abs((data[i].x + data[i].y) - (data[i-1].x + data[i-1].y));
+
+        if (t > max) {
+            var obj = {
+                x: x / c,
+                y: y / c,
+                r: log10(y) * multiplier
+            };
+
+            result.push(obj);
+
+            x = data[i].x;
+            y = data[i].y;
+            c = 1;
+        } else {
+            x += data[i].x;
+            y += data[i].y;
+            c++;
+        }
+    }
+
+    result.push({
+        x: x / c,
+        y: y / c,
+        r: log10(x) * multiplier
+    })
+
+    return result
+  }
+
+  var datas = generateChartData(datas2)
+  var colors = generateColors(datas)
+
+  var arrX = []
+  var arrY = []
+  var arrR = []
+
+  datas.map(function(item) {
+
+    console.log(item);
+
+    arrX.push(item.x)
+    arrY.push(item.y)
+    arrR.push(item.r)
+  })
+
+  console.log(arrR);
+  console.log(colors, 'col');
+
+  function generateColors(result) {
+    //parse radius
+    var arrRadius = []
+    for(var i = 0; i < result.length; i++) {
+      arrRadius.push(result[i].r)
+    }
+
+    //generate colors
+    var arrColors = []
+    for(var i = 0; i < arrRadius.length; i++) {
+      var max = arrRadius.reduce(function(a, b) {
+        return Math.max(a, b);
+      });
+      var min = arrRadius.reduce(function(a, b) {
+        return Math.min(a, b);
+      });
+
+
+      var rgbPercent = 255 / 100
+      var iterateElemPercent = (arrRadius[i] / max) * 100
+      var colorPercent = iterateElemPercent * rgbPercent
+
+      var colorStr = [ Math.round(colorPercent), 0,Math.round(255 - colorPercent) ];
+      var colorStr = rgbToHex(Math.round(colorPercent), 0, Math.round(255 - colorPercent))
+
+      arrColors.push(colorStr)
+    }
+
+    return arrColors
+  }
+  	TESTER = document.getElementById('tester');
+    hoverInfo = document.getElementById('hoverinfo')
+    var trace1 = {
+        x: arrX,
+        y: arrY,
+        text: ['iii'],
+        mode: 'markers',
+        type:'scatter',
+        marker: {
+            color: colors,
+            size: arrR,
+        }
+    };
+
+    var data = [trace1];
+
+    var layout = {
+      xaxis: {title: 'Life Expectancy'},
+      yaxis: {
+        title: 'GDP per Capita',
+        tickmode: "array",
+        tickvals: [0, 5, 8],
+        showticklabels: true,
+      },
+      hovermode:'closest'
+    };
+
+
+    Plotly.newPlot(TESTER, data, layout, {showLink: false});
+
+    /*Plotly.d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv', function(err, rows){
+var YEAR = 2007;
+var continents = ['Asia', 'Europe', 'Africa', 'Oceania', 'Americas'];
+var POP_TO_PX_SIZE = 2e5;
+function unpack(rows, key) {
+  return rows.map(function(row) { return row[key]; });
+}
+
+var data = continents.map(function(continent) {
+  var rowsFiltered = rows.filter(function(row) {
+      return (row.continent === continent) && (+row.year === YEAR);
+  });
+
+  console.log(unpack(rowsFiltered, 'country'));
+  console.log(continent, 'console');
+  return {
+      mode: 'markers',
+      name: continent,
+      x: unpack(rowsFiltered, 'lifeExp'),
+      y: unpack(rowsFiltered, 'gdpPercap'),
+      text: unpack(rowsFiltered, 'country'),
+      marker: {
+          sizemode: 'area',
+          size: unpack(rowsFiltered, 'pop'),
+          sizeref: POP_TO_PX_SIZE
+      }
+  };
+});
+var layout = {
+  xaxis: {title: 'Life Expectancy'},
+  yaxis: {title: 'GDP per Capita', type: 'log'},
+  margin: {t: 20},
+  hovermode: 'closest'
+};
+Plotly.plot(TESTER, data, layout, {showLink: false});*/
+/*});*/
+  </script>
+
+</body>
+</html>
